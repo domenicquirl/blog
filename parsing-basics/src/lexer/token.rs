@@ -78,6 +78,7 @@ pub enum TokenKind {
     Ampersand,
     Bar,
     Colon,
+    SemiColon,
     // Brackets
     LAngle,
     RAngle,
@@ -107,6 +108,7 @@ pub enum TokenKind {
     Leq,
     // Misc,
     Error,
+    Whitespace,
     Eof,
 }
 
@@ -150,6 +152,9 @@ macro_rules! T {
     };
     [:] => {
         $crate::lexer::TokenKind::Colon
+    };
+    [;] => {
+        $crate::lexer::TokenKind::SemiColon
     };
     [<] => {
         $crate::lexer::TokenKind::LAngle
@@ -226,6 +231,9 @@ macro_rules! T {
     [error] => {
         $crate::lexer::TokenKind::Error
     };
+    [ws] => {
+        $crate::lexer::TokenKind::Whitespace
+    };
     [EOF] => {
         $crate::lexer::TokenKind::Eof
     };
@@ -251,6 +259,7 @@ impl fmt::Display for TokenKind {
                 T![&] => "&",
                 T![|] => "|",
                 T![:] => ":",
+                T![;] => ";",
                 // Brackets
                 T![<] => "<",
                 T![>] => ">",
@@ -280,6 +289,7 @@ impl fmt::Display for TokenKind {
                 T![<=] => "<=",
                 // Misc
                 T![error] => "<?>",
+                T![ws] => "<WS>",
                 T![EOF] => "<EOF>",
             }
         )
