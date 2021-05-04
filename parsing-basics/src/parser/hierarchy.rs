@@ -5,6 +5,15 @@ impl<'input, I> Parser<'input, I>
 where
     I: Iterator<Item = Token>,
 {
+    pub fn file(&mut self) -> Vec<ast::Item> {
+        let mut items = Vec::new();
+        while !self.at(T![EOF]) {
+            let item = self.item();
+            items.push(item);
+        }
+        items
+    }
+
     pub fn item(&mut self) -> ast::Item {
         match self.peek() {
             T![fn] => {
