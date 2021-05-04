@@ -1,4 +1,8 @@
-use parsing_basics::{lexer::*, T};
+use parsing_basics::{
+    lexer::*,
+    parser::{ast, Parser},
+    T,
+};
 use unindent::unindent;
 
 /// walks `$tokens` and compares them to the given kinds.
@@ -144,4 +148,46 @@ fn struct_def() {
 
     let foo = tokens[1];
     assert_eq!(foo.text(input), "Foo");
+}
+
+#[test]
+fn parse_expression() {
+    fn parse(input: &str) -> ast::Expr {
+        let mut parser = Parser::new(input);
+        parser.parse_expression()
+    }
+
+    // Weird spaces are to test that whitespace gets filtered out
+    let expr = parse("42");
+    assert_eq!(expr, ast::Expr::Literal(ast::Lit::Int(42)));
+    let expr = parse("  2.7768");
+    assert_eq!(expr, ast::Expr::Literal(ast::Lit::Float(2.7768)));
+    let expr = parse(r#""I am a String!""#);
+    assert_eq!(expr, ast::Expr::Literal(ast::Lit::Str("I am a String!".to_string())));
+    let expr = parse("foo");
+    assert_eq!(expr, ast::Expr::Ident("foo".to_string()));
+    let expr = parse("bar (  x, 2)");
+    assert_eq!(
+        expr,
+        ast::Expr::FnCall {
+            fn_name: "bar".to_string(),
+            args:    vec![ast::Expr::Ident("x".to_string()), ast::Expr::Literal(ast::Lit::Int(2)),],
+        }
+    );
+    let expr = parse("!  is_visible");
+    assert_eq!(
+        expr,
+        ast::Expr::PrefixOp {
+            op:   T![!],
+            expr: Box::new(ast::Expr::Ident("is_visible".to_string())),
+        }
+    );
+    let expr = parse("(-13)");
+    assert_eq!(
+        expr,
+        ast::Expr::PrefixOp {
+            op:   T![-],
+            expr: Box::new(ast::Expr::Literal(ast::Lit::Int(13))),
+        }
+    );
 }

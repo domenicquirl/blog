@@ -1,12 +1,9 @@
 mod rules;
 mod token;
 
-pub use token::TokenKind;
+pub use token::{Span, Token, TokenKind};
 
-use crate::{
-    lexer::token::{Span, Token},
-    T,
-};
+use crate::T;
 
 use self::rules::{unambiguous_single_char, Rule};
 
