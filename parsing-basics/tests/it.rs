@@ -154,7 +154,7 @@ fn struct_def() {
 fn parse_expression() {
     fn parse(input: &str) -> ast::Expr {
         let mut parser = Parser::new(input);
-        parser.parse_expression()
+        parser.expression()
     }
 
     // Weird spaces are to test that whitespace gets filtered out
@@ -190,4 +190,47 @@ fn parse_expression() {
             expr: Box::new(ast::Expr::Literal(ast::Lit::Int(13))),
         }
     );
+}
+
+#[test]
+fn parse_binary_expressions() {
+    fn parse(input: &str) -> ast::Expr {
+        let mut parser = Parser::new(input);
+        parser.expression()
+    }
+
+    let expr = parse("4 + 2 * 3");
+    assert_eq!(expr.to_string(), "(4 + (2 * 3))");
+
+    let expr = parse("4 * 2 + 3");
+    assert_eq!(expr.to_string(), "((4 * 2) + 3)");
+
+    let expr = parse("4 - 2 - 3");
+    assert_eq!(expr.to_string(), "((4 - 2) - 3)");
+
+    let expr = parse("4 ^ 2 ^ 3");
+    assert_eq!(expr.to_string(), "(4 ^ (2 ^ 3))");
+
+    let expr = parse(r#"45.7 + 3 + 5 * 4^8^9 / 6 > 4 && test - 7 / 4 == "Hallo""#);
+    assert_eq!(
+        expr.to_string(),
+        r#"((((45.7 + 3) + ((5 * (4 ^ (8 ^ 9))) / 6)) > 4) && ((test - (7 / 4)) == "Hallo"))"#
+    );
+
+    let expr = parse("2.0 / ((3.0 + 4.0) * (5.0 - 6.0)) * 7.0");
+    assert_eq!(expr.to_string(), "((2 / ((3 + 4) * (5 - 6))) * 7)");
+
+    let expr = parse("min ( test + 4 , sin(2*PI ))");
+    assert_eq!(expr.to_string(), "min((test + 4),sin((2 * PI),),)");
+}
+
+#[test]
+fn parse_postfix_op() {
+    fn parse(input: &str) -> ast::Expr {
+        let mut parser = Parser::new(input);
+        parser.expression()
+    }
+
+    let expr = parse("4 + -2! * 3");
+    assert_eq!(expr.to_string(), "(4 + ((- (2 !)) * 3))");
 }

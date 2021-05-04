@@ -56,7 +56,7 @@ impl fmt::Display for Lit {
         match self {
             Lit::Int(i) => write!(f, "{}", i),
             Lit::Float(fl) => write!(f, "{}", fl),
-            Lit::Str(s) => write!(f, "{}", s),
+            Lit::Str(s) => write!(f, r#""{}""#, s),
         }
     }
 }
