@@ -370,3 +370,128 @@ fn parse_statements() {
         _ => unreachable!(),
     }
 }
+
+#[test]
+fn parse_struct() {
+    fn parse(input: &str) -> ast::Item {
+        let mut parser = Parser::new(input);
+        parser.item()
+    }
+
+    let item = parse(
+        unindent(
+            r#"
+        struct Foo<T, U> {
+            x: String,
+            bar: Bar<Baz<T>, U>
+        }
+    "#,
+        )
+        .as_str(),
+    );
+
+    match item {
+        ast::Item::Struct { name, members } => {
+            assert_eq!(
+                name,
+                ast::Type {
+                    name:     "Foo".to_string(),
+                    generics: vec![
+                        ast::Type {
+                            name:     "T".to_string(),
+                            generics: vec![],
+                        },
+                        ast::Type {
+                            name:     "U".to_string(),
+                            generics: vec![],
+                        }
+                    ],
+                }
+            );
+            assert_eq!(members.len(), 2);
+            let (bar, bar_type) = &members[1];
+            assert_eq!(bar, "bar");
+            assert_eq!(
+                bar_type,
+                &ast::Type {
+                    name:     "Bar".to_string(),
+                    generics: vec![
+                        ast::Type {
+                            name:     "Baz".to_string(),
+                            generics: vec![ast::Type {
+                                name:     "T".to_string(),
+                                generics: vec![],
+                            }],
+                        },
+                        ast::Type {
+                            name:     "U".to_string(),
+                            generics: vec![],
+                        }
+                    ],
+                }
+            );
+        }
+        _ => unreachable!(),
+    };
+}
+
+#[test]
+fn parse_function() {
+    fn parse(input: &str) -> ast::Item {
+        let mut parser = Parser::new(input);
+        parser.item()
+    }
+
+    let item = parse(
+        unindent(
+            r#"
+        fn wow_we_did_it(x: String, bar: Bar<Baz<T>, U>) {
+            let x = 7 + sin(y);
+            {
+                x = 3;
+                if (bar < 3) {
+                    x = x + 1;
+                    y = 3 * x;
+                } else if (bar < 2) {
+                    let i = 2!;
+                    x = x + i;
+                } else {
+                    x = 1;
+                }
+            }
+        }
+    "#,
+        )
+        .as_str(),
+    );
+
+    match item {
+        ast::Item::Function { name, parameters, body } => {
+            assert_eq!(name, "wow_we_did_it");
+            assert_eq!(parameters.len(), 2);
+            let (bar, bar_type) = &parameters[1];
+            assert_eq!(bar, "bar");
+            assert_eq!(
+                bar_type,
+                &ast::Type {
+                    name:     "Bar".to_string(),
+                    generics: vec![
+                        ast::Type {
+                            name:     "Baz".to_string(),
+                            generics: vec![ast::Type {
+                                name:     "T".to_string(),
+                                generics: vec![],
+                            }],
+                        },
+                        ast::Type {
+                            name:     "U".to_string(),
+                            generics: vec![],
+                        }
+                    ],
+                }
+            );
+            assert_eq!(body.len(), 2);
+        }
+        _ => unreachable!(),
+    };
+}

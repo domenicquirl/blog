@@ -3,6 +3,25 @@ use std::fmt;
 use crate::lexer::TokenKind;
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum Item {
+    Struct {
+        name:    Type,
+        members: Vec<(String, Type)>,
+    },
+    Function {
+        name:       String,
+        parameters: Vec<(String, Type)>,
+        body:       Vec<Stmt>,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Type {
+    pub name:     String,
+    pub generics: Vec<Type>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Stmt {
     Let {
         var_name: String,

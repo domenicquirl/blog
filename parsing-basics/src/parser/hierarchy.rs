@@ -5,6 +5,110 @@ impl<'input, I> Parser<'input, I>
 where
     I: Iterator<Item = Token>,
 {
+    pub fn item(&mut self) -> ast::Item {
+        match self.peek() {
+            T![fn] => {
+                self.consume(T![fn]);
+                let mut parameters = Vec::new();
+
+                let ident = self
+                    .next()
+                    .expect("Tried to parse struct member, but there were no more tokens");
+                assert_eq!(
+                    ident.kind,
+                    T![ident],
+                    "Expected identifier as struct member, but found `{}`",
+                    ident.kind
+                );
+                let name = self.text(ident).to_string();
+
+                self.consume(T!['(']);
+                while !self.at(T![')']) {
+                    let parameter_ident = self
+                        .next()
+                        .expect("Tried to parse struct member, but there were no more tokens");
+                    assert_eq!(
+                        parameter_ident.kind,
+                        T![ident],
+                        "Expected identifier as struct member, but found `{}`",
+                        parameter_ident.kind
+                    );
+                    let parameter_name = self.text(parameter_ident).to_string();
+                    self.consume(T![:]);
+                    let parameter_type = self.type_();
+                    parameters.push((parameter_name, parameter_type));
+                    if self.at(T![,]) {
+                        self.consume(T![,]);
+                    }
+                }
+                self.consume(T![')']);
+
+                assert!(self.at(T!['{']), "Expected a block after function header");
+                let body = match self.statement() {
+                    ast::Stmt::Block { stmts } => stmts,
+                    _ => unreachable!(),
+                };
+
+                ast::Item::Function { name, parameters, body }
+            }
+            T![struct] => {
+                self.consume(T![struct]);
+                let mut members = Vec::new();
+                let name = self.type_();
+                self.consume(T!['{']);
+                while !self.at(T!['}']) {
+                    let member_ident = self
+                        .next()
+                        .expect("Tried to parse struct member, but there were no more tokens");
+                    assert_eq!(
+                        member_ident.kind,
+                        T![ident],
+                        "Expected identifier as struct member, but found `{}`",
+                        member_ident.kind
+                    );
+                    let member_name = self.text(member_ident).to_string();
+                    self.consume(T![:]);
+                    let member_type = self.type_();
+                    members.push((member_name, member_type));
+                    if self.at(T![,]) {
+                        self.consume(T![,]);
+                    }
+                }
+                self.consume(T!['}']);
+                ast::Item::Struct { name, members }
+            }
+            kind => panic!("Unknown start of item: `{}`", kind),
+        }
+    }
+
+    pub fn type_(&mut self) -> ast::Type {
+        let ident = self.next().expect("Tried to parse type, but there were no more tokens");
+        assert_eq!(
+            ident.kind,
+            T![ident],
+            "Expected identifier at start of type, but found `{}`",
+            ident.kind
+        );
+        let name = self.text(ident).to_string();
+
+        let mut generics = Vec::new();
+
+        if self.at(T![<]) {
+            self.consume(T![<]);
+            while !self.at(T![>]) {
+                // Generic parameters are also types
+                let generic = self.type_();
+                generics.push(generic);
+                if self.at(T![,]) {
+                    self.consume(T![,]);
+                }
+            }
+            self.consume(T![>]);
+        }
+
+        ast::Type { name, generics }
+    }
+
     pub fn statement(&mut self) -> ast::Stmt {
         match self.peek() {
             T![let] => {
@@ -48,7 +152,6 @@ where
                     ast::Stmt::Block { stmts } => stmts,
                     _ => unreachable!(),
                 };
-                self.consume(T!['}']);
 
                 let else_stmt = if self.at(T![else]) {
                     self.consume(T![else]);
@@ -74,6 +177,7 @@ where
                     let stmt = self.statement();
                     stmts.push(stmt);
                 }
+                self.consume(T!['}']);
                 ast::Stmt::Block { stmts }
             }
             kind => panic!("Unknown start of statement: `{}`", kind),
