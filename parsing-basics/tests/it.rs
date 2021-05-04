@@ -129,7 +129,8 @@ fn struct_def() {
         }
     "#;
     let input = unindent(input);
-    let mut lexer = Lexer::new(input.as_str());
+    let input = input.as_str();
+    let mut lexer = Lexer::new(input);
     let tokens: Vec<_> = lexer.tokenize().into_iter().filter(|t| t.kind != T![ws]).collect();
     assert_tokens!(tokens, [
         T![struct], T![ident], T![<], T![ident], T![>], T!['{'], // struct definition/type
@@ -139,4 +140,8 @@ fn struct_def() {
     ]);
     let bar = tokens[6];
     assert_eq!(bar.span, (20..23).into()); // unindented span
+    assert_eq!(bar.text(input), "bar");
+
+    let foo = tokens[1];
+    assert_eq!(foo.text(input), "Foo");
 }
