@@ -234,3 +234,139 @@ fn parse_postfix_op() {
     let expr = parse("4 + -2! * 3");
     assert_eq!(expr.to_string(), "(4 + ((- (2 !)) * 3))");
 }
+
+#[test]
+fn parse_statements() {
+    fn parse(input: &str) -> ast::Stmt {
+        let mut parser = Parser::new(input);
+        parser.statement()
+    }
+
+    let stmt = parse(
+        unindent(
+            r#"
+        {
+            let x = 7 + sin(y);
+            {
+                x = 3;
+                if (bar < 3) {
+                    x = x + 1;
+                    y = 3 * x;
+                } else if (bar < 2) {
+                    let i = 2!;
+                    x = x + i;
+                } else {
+                    x = 1;
+                }
+            }
+        }
+    "#,
+        )
+        .as_str(),
+    );
+
+    let stmts = match stmt {
+        ast::Stmt::Block { stmts } => stmts,
+        _ => unreachable!(),
+    };
+    assert_eq!(stmts.len(), 2);
+
+    let let_stmt = &stmts[0];
+    match let_stmt {
+        ast::Stmt::Let { var_name, .. } => assert_eq!(var_name, "x"),
+        _ => unreachable!(),
+    }
+
+    let stmts = match &stmts[1] {
+        ast::Stmt::Block { stmts } => stmts,
+        _ => unreachable!(),
+    };
+    assert_eq!(stmts.len(), 2);
+
+    let assignment_stmt = &stmts[0];
+    match assignment_stmt {
+        ast::Stmt::Assignment { var_name, .. } => assert_eq!(var_name, "x"),
+        _ => unreachable!(),
+    }
+
+    let if_stmt = &stmts[1];
+    match if_stmt {
+        ast::Stmt::IfStmt {
+            condition,
+            body,
+            else_stmt,
+        } => {
+            assert!(matches!(
+                &**condition,
+                ast::Expr::InfixOp {
+                    op:  T![<],
+                    lhs: _lhs,
+                    rhs: _rhs,
+                }
+            ));
+            assert_eq!(body.len(), 2);
+            let x_assignment = &body[0];
+            match x_assignment {
+                ast::Stmt::Assignment { var_name, .. } => assert_eq!(var_name, "x"),
+                _ => unreachable!(),
+            }
+            let y_assignment = &body[1];
+            match y_assignment {
+                ast::Stmt::Assignment { var_name, .. } => assert_eq!(var_name, "y"),
+                _ => unreachable!(),
+            }
+
+            let else_stmt = match else_stmt {
+                Some(stmt) => &**stmt,
+                None => unreachable!(),
+            };
+
+            match else_stmt {
+                ast::Stmt::IfStmt {
+                    condition,
+                    body,
+                    else_stmt,
+                } => {
+                    assert!(matches!(
+                        &**condition,
+                        ast::Expr::InfixOp {
+                            op:  T![<],
+                            lhs: _lhs,
+                            rhs: _rhs,
+                        }
+                    ));
+                    assert_eq!(body.len(), 2);
+                    let let_i = &body[0];
+                    match let_i {
+                        ast::Stmt::Let { var_name, .. } => assert_eq!(var_name, "i"),
+                        _ => unreachable!(),
+                    }
+                    let x_assignment = &body[1];
+                    match x_assignment {
+                        ast::Stmt::Assignment { var_name, .. } => assert_eq!(var_name, "x"),
+                        _ => unreachable!(),
+                    }
+
+                    let else_stmt = match else_stmt {
+                        Some(stmt) => &**stmt,
+                        None => unreachable!(),
+                    };
+
+                    let stmts = match else_stmt {
+                        ast::Stmt::Block { stmts } => stmts,
+                        _ => unreachable!(),
+                    };
+                    assert_eq!(stmts.len(), 1);
+
+                    let x_assignment = &stmts[0];
+                    match x_assignment {
+                        ast::Stmt::Assignment { var_name, .. } => assert_eq!(var_name, "x"),
+                        _ => unreachable!(),
+                    }
+                }
+                _ => unreachable!(),
+            };
+        }
+        _ => unreachable!(),
+    }
+}

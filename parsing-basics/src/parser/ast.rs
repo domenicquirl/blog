@@ -3,6 +3,26 @@ use std::fmt;
 use crate::lexer::TokenKind;
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum Stmt {
+    Let {
+        var_name: String,
+        value:    Box<Expr>,
+    },
+    Assignment {
+        var_name: String,
+        value:    Box<Expr>,
+    },
+    IfStmt {
+        condition: Box<Expr>,
+        body:      Vec<Stmt>,
+        else_stmt: Option<Box<Stmt>>,
+    },
+    Block {
+        stmts: Vec<Stmt>,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
     Literal(Lit),
     Ident(String),

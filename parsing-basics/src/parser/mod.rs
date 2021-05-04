@@ -4,6 +4,7 @@ use crate::{lexer::*, T};
 
 pub mod ast;
 mod expressions;
+mod hierarchy;
 
 pub struct Parser<'input, I>
 where
