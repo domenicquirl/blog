@@ -1,20 +1,28 @@
+mod generated;
 mod rules;
 mod token;
 
+use logos::Logos;
 pub use token::{Span, Token, TokenKind};
 
 use crate::T;
 
-use self::rules::{unambiguous_single_char, Rule};
+use self::{
+    generated::LogosToken,
+    rules::{unambiguous_single_char, Rule},
+};
 
-pub struct Lexer<'input> {
+//pub type Lexer<'input> = CustomLexer<'input>;
+pub type Lexer<'input> = LogosLexer<'input>;
+
+pub struct CustomLexer<'input> {
     input:    &'input str,
     position: u32,
     eof:      bool,
     rules:    Vec<Rule>,
 }
 
-impl<'input> Lexer<'input> {
+impl<'input> CustomLexer<'input> {
     pub fn new(input: &'input str) -> Self {
         Self {
             input,
@@ -93,7 +101,7 @@ impl<'input> Lexer<'input> {
     }
 }
 
-impl<'input> Iterator for Lexer<'input> {
+impl<'input> Iterator for CustomLexer<'input> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -111,6 +119,45 @@ impl<'input> Iterator for Lexer<'input> {
             })
         } else {
             Some(self.next_token(&self.input[self.position as usize..]))
+        }
+    }
+}
+
+pub struct LogosLexer<'input> {
+    generated: logos::SpannedIter<'input, LogosToken>,
+    eof:       bool,
+}
+
+impl<'input> LogosLexer<'input> {
+    pub fn new(input: &'input str) -> Self {
+        Self {
+            generated: LogosToken::lexer(input).spanned(),
+            eof:       false,
+        }
+    }
+
+    pub fn tokenize(&mut self) -> Vec<Token> {
+        self.collect()
+    }
+}
+
+impl<'input> Iterator for LogosLexer<'input> {
+    type Item = Token;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.generated.next() {
+            Some((token, span)) => Some(Token {
+                kind: token.kind(),
+                span: span.into(),
+            }),
+            None if self.eof => None,
+            None => {
+                self.eof = true;
+                Some(Token {
+                    kind: T![EOF],
+                    span: (0..0).into(),
+                })
+            }
         }
     }
 }

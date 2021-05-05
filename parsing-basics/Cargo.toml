@@ -9,6 +9,12 @@ edition = "2018"
 [dependencies]
 regex = "1"
 lazy_static = "1"
+logos = "0.12"
 
 [dev-dependencies]
 unindent = "0.1"
+criterion = "0.3.4"
+
+[[bench]]
+name = "main"
+harness = false
