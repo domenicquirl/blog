@@ -22,11 +22,11 @@ where
 
                 let ident = self
                     .next()
-                    .expect("Tried to parse struct member, but there were no more tokens");
+                    .expect("Tried to parse function name, but there were no more tokens");
                 assert_eq!(
                     ident.kind,
                     T![ident],
-                    "Expected identifier as struct member, but found `{}`",
+                    "Expected identifier as function name, but found `{}`",
                     ident.kind
                 );
                 let name = self.text(ident).to_string();
@@ -35,11 +35,11 @@ where
                 while !self.at(T![')']) {
                     let parameter_ident = self
                         .next()
-                        .expect("Tried to parse struct member, but there were no more tokens");
+                        .expect("Tried to parse function argument, but there were no more tokens");
                     assert_eq!(
                         parameter_ident.kind,
                         T![ident],
-                        "Expected identifier as struct member, but found `{}`",
+                        "Expected identifier as function argument, but found `{}`",
                         parameter_ident.kind
                     );
                     let parameter_name = self.text(parameter_ident).to_string();
