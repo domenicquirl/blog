@@ -105,7 +105,7 @@ where
 
             if let Some((left_binding_power, ())) = op.postfix_binding_power() {
                 if left_binding_power < binding_power {
-                    // previous operator has higher binding power then new one --> end of expression
+                    // previous operator has higher binding power than new one --> end of expression
                     break;
                 }
 
@@ -121,7 +121,7 @@ where
 
             if let Some((left_binding_power, right_binding_power)) = op.infix_binding_power() {
                 if left_binding_power < binding_power {
-                    // previous operator has higher binding power then new one --> end of expression
+                    // previous operator has higher binding power than new one --> end of expression
                     break;
                 }
 
