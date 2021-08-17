@@ -35,11 +35,11 @@ where
                 while !self.at(T![')']) {
                     let parameter_ident = self
                         .next()
-                        .expect("Tried to parse function argument, but there were no more tokens");
+                        .expect("Tried to parse function parameter, but there were no more tokens");
                     assert_eq!(
                         parameter_ident.kind,
                         T![ident],
-                        "Expected identifier as function argument, but found `{}`",
+                        "Expected identifier as function parameter, but found `{}`",
                         parameter_ident.kind
                     );
                     let parameter_name = self.text(parameter_ident).to_string();
