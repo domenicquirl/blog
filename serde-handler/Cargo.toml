@@ -1,0 +1,41 @@
+[package]
+name    = "serde-handler"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+default              = []
+working              = []
+missing_closure_type = []
+start                = []
+zero_copy1           = []
+zero_copy2           = []
+zero_copy3           = []
+zero_copy4           = []
+multiple_handlers1   = []
+multiple_handlers2   = []
+multiple_handlers3   = []
+multiple_handlers4   = []
+
+[[example]]
+name              = "working"
+required-features = ["working"]
+
+[[example]]
+name              = "zero_copy2"
+required-features = ["zero_copy2"]
+
+[[example]]
+name              = "zero_copy3"
+required-features = ["zero_copy3"]
+
+[[example]]
+name              = "zero_copy4"
+required-features = ["zero_copy4"]
+
+
+[dependencies]
+serde      = { version = "1.0.190", features = ["derive"] }
+serde_json = "1.0.108"
