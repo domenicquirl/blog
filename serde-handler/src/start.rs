@@ -50,7 +50,7 @@ impl Responder {
     /// sending back the computed reply.
     pub fn serve_forever<A: Api, H>(self, mut handler: H) -> Result<()>
     where
-        H: FnMut(&A::Request) -> A::Reply,
+        H: FnMut(A::Request) -> A::Reply,
         A::Request: DeserializeOwned,
         A::Reply: Serialize,
     {
@@ -58,7 +58,7 @@ impl Responder {
             let Message { api_name, data } = self.next_request()?;
             let data =
                 serde_json::from_slice(&data).map_err(|e| format!("Deserialize error: {e}"))?;
-            let reply = handler(&data);
+            let reply = handler(data);
             let data =
                 serde_json::to_vec_pretty(&reply).map_err(|e| format!("Serialize error: {e}"))?;
             let response = Message { api_name, data };
