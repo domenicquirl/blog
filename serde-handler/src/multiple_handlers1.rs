@@ -24,7 +24,7 @@ pub trait Api: Serialize {
 }
 
 pub struct ApiRouter {
-    handlers: HashMap<&'static str, Handler<A>>,
+    handlers: HashMap<&'static str, dyn Handler<A>>,
 }
 
 impl ApiRouter {
