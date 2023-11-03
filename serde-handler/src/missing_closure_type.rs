@@ -108,7 +108,7 @@ impl BoxedHandler {
     where
         H: 'static,
     {
-        let handler = move |request_data: &[u8]| -> Result<Vec<u8>> {
+        let handler = move |request_data| -> Result<Vec<u8>> {
             let request: A::Request<'_> = serde_json::from_slice(request_data)
                 .map_err(|e| format!("Deserialize error: {e}"))?;
             let reply = handler(request);

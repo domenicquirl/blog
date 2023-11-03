@@ -26,8 +26,8 @@ pub trait HandlerOn<'req, A: Api>: FnMut(A::Request<'req>) -> A::Reply {}
 impl<'req, A: Api, F: FnMut(A::Request<'req>) -> A::Reply> HandlerOn<'req, A> for F {}
 
 /// A function that can handle [`A::Request<'de>`](Api::Request) for any `'de`.
-pub trait Handler<A: Api>: for<'req> FnMut(A::Request<'req>) -> A::Reply {}
-impl<A: Api, F: for<'req> FnMut(A::Request<'req>) -> A::Reply> Handler<A> for F {}
+pub trait Handler<A: Api>: for<'req> HandlerOn<'req, A> {}
+impl<A: Api, F: for<'req> HandlerOn<'req, A>> Handler<A> for F {}
 
 impl Requester {
     pub fn request<'a, A: Api<Request<'a> = A>>(&self, request: A) -> Result<A::Reply> {
